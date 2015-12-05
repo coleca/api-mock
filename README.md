@@ -6,6 +6,12 @@ Run a api-doc application in docker.
 
 See more about the application: https://github.com/localmed/api-mock
 
+## This has been modified to work with Kubernetes secrets located in /etc/secrets/api.md
+## Example to run without Kubernetes:
+
+```docker run -it -v /tmp/api.md:/etc/secrets/api.md coleca/api-mock 
+
+
 ## Example
 
 api.md

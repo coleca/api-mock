@@ -1,1 +1,2 @@
-FROM node
+FROM readytalk/nodejs-runtime
+
