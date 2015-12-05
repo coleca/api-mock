@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Package json file to install and start api-mock daemon in docker",
   "scripts": {
-    "start": "$(npm bin)/api-mock api.md"
+    "start": "$(npm bin)/api-mock /etc/secrets/api.md"
   },
   "author": "Lajos Koszti <ajnasz@ajnasz.hu>",
   "license": "MIT",
