@@ -1,0 +1,598 @@
+FORMAT: 1A
+HOST: https://api.kairos.com/
+
+# Developing with Kairos
+
+## Overview
+
+We're building a platform that lets you quickly add [Emotion Analysis](https://www.kairos.com/emotion-analysis-api) and [Face Recognition](https://www.kairos.com/face-recognition-api) into your apps and services.
+We’ve made it simple to connect with Kairos via our REST-style APIs. Client libraries for your favorite languages are coming soon.
+
+>**Note:** We have provided sample APP_KEY, APP_ID, and image URLs in the sandbox.  Please replace with your keys / images during development.
+
+## Help and Support
+
+We'd love to hear feedback from you and we're also here to help if you have any challenges.
+We have lots of answers to popular queries in our [knowledge base](https://www.kairos.com/support) or you can [ask us a question](https://www.kairos.com/contact).
+Failing that, feel free to [contact our tech team](mailto:support@kairos.com?subject=I have a question about your APIs).
+
+# Group Emotion Analysis
+
+### Overview
+
+Analyze and understand facial expressions and engagement in any video or image. We look for faces in your footage and pass the facial features and expressions through our Emotion Alogrithms.
+Every 250ms we will return values for things like "smile", "surprise", "negative" and "attention".  This helps you figure out how someone might be feeling.
+
+###Base URL
+
+    https://api.kairos.com/
+
+###Authentication
+
+Requests must be authenticated with your API key. This must be sent as an HTTP header:
+
+    app_id:  "YOUR APP_KEY"
+    app_key: "YOUR APP_ID"
+
+You can create and manage your API Keys via your [dashboard](https://developer.kairos.com). It's free to sign-up and start testing.
+
+###Requests
+
+Requests return a JSON object with the header:
+
+    Content-Type: application/json
+
+###Usage
+
+It's free to [sign-up and start testing](https://www.kairos.com/signup-emotion).
+
+
+### POST /media{?source}
+####Create a new media object to be processed.
+
++ Parameters
+    + source: `http://media.kairos.com/test.flv` (string) - The source of the media. URL or file upload.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/emotion-analysis/mediasource/post?console=1">Try it in our API sandbox</a-->
+
++ Request
+
+    + Headers
+
+            app_id: 4985f625
+            app_key: 24ad28c4dd3c94df26b2ac78d96a5ccf
+
++ Response 202
+
+        {
+            "status_code": 2,
+            "id": "e4a8512f022152cc0df0b324",
+            "status_message": "Processing"
+        }
+
++ Response 200 (application/json)
+
+        {
+            "code": 1002,
+            "message": "Required source parameter missing."
+        }
+
+
+
+### GET /media/{id}
+####Returns the results of a specific uploaded piece of media.
+
++ Parameters
+    + id: `1` (string) - The id of the media.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/emotion-analysis/mediasid/get?console=1">Try it in our API sandbox</a-->
+
++ Request
+    + Headers
+
+             app_id: 4985f625
+             app_key: 24ad28c4dd3c94df26b2ac78d96a5ccf
+
++ Response 200
+
+    + Body
+
+        ```js
+        {
+            "id": "012345678901234567890123",
+            "status" : "complete",
+            "length" : 123,
+            "frames": [
+                {
+                    "person": {
+                        "id": 0,
+                        "time": 0,
+                        "emotions": {
+                            "smile": 1.527,
+                            "surprise": 2,
+                            "negative": 10.303",
+                            "attention": 100
+                        }
+                    }
+                },
+                {
+                    "person" : {
+                        "id" : 0,
+                        ...
+                    }
+                }
+                ...
+             ]
+        }
+        ```
+
++ Response 200 (application/json)
+
+        {
+            "id": "1",
+            "status_code": 3,
+            "status_message": "Error. Media record not found."
+        }
+
+
+### DELETE /media/{id}
+####Delete media results. It returns the status of the operation.
+
++ Parameters
+    + id: `1` (string) - The id of the media.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/emotion-analysis/mediasid/delete?console=1">Try it in our API sandbox</a-->
+
++ Request
+    + Headers
+
+            app_id: 4985f625
+            app_key: 24ad28c4dd3c94df26b2ac78d96a5ccf
+
++ Response 200
+
+        {
+            "id": "9187207b6f1b41c681a8f529",
+            "status_code": "5",
+            "status_message": "Deleted"
+        }
+
++ Response 200
+
+        {
+            "code": 5003,
+            "message": "Unable to delete media."
+        }
+
+
+# Group Face Recognition
+
+### Overview
+
+Detect human faces in photos and images. We will return information on facial features as coordinates on the image.
+
+###Base URL
+
+    https://api.kairos.com/
+
+###Authentication
+
+Requests must be authenticated with your API key. This must be sent as an HTTP header:
+
+    app_id:  "YOUR APP_KEY"
+    app_key: "YOUR APP_ID"
+
+You can create and manage your API Keys via your [dashboard](https://developer.kairos.com). It's free to sign-up and start testing.
+
+###Requests
+
+Requests return a JSON object with the header:
+
+    Content-Type: application/json
+
+###Usage
+
+It's free to [sign-up and start testing](https://www.kairos.com/signup).
+
+## POST /enroll
+####Takes a photo, finds the faces within it, and stores the faces into a gallery you create.
+
+To enroll someone into a gallery, all you need to do is submit a JPG or PNG photo.  You can submit the photo either as a publicly accessible URL or Base64 encoded.
+
+Next you need to choose an identifier for the person being enrolled.  The identifier could be their name ("Bob"), something unique to your app ("ABC123xyz"), or anything meaningful for you.  We call that identifier "subject_id".
+
+You also need to pick a name for the gallery we are storing your faces in.  We`ve called this "gallery_name".    If you had used that gallery name before, we will just add your new face to it, otherwise we will create a new gallery for you.
+
+Finally, we have some advanced options available for your use.  We have set these options to sensible defaults, but sometimes there is a need to override them and we have provided that facility for you.
+
+>**Tip:** _You can enroll multiple pictures of the same person (aka subject) to improve the matching accuracy.  We find that 6-8 pictures is optimal, but it works fine with just 1._
+
++ Parameters
+    + image (required, string, `"url":"http://media.kairos.com/kairos-elizabeth.jpg"`) ... Publicly accessible URL or Base64 encoded photo.
+    + subject_id (required, string, `"subject_id":"Elizabeth"`) ... Defined by you. `subject_id` is used as an identifier for the face.
+    + gallery_name (required, string, `"gallery_name":"MyGallery"`)... Defined by you. `gallery_name` is used to identify the gallery.
+    + minHeadScale (optional, float, `"minHeadScale":".125"`)... Defined by you. `minHeadScale` is used to set the ratio of the smallest face we should look for in the photo. Accepts a value between .015 (1:64 scale) and .5 (1:2 scale). By default it is set at .125 (1:8 scale) if not specified.
+    + selector = `FACE` (optional, selector type, `"selector":"FACE"`)... `selector` is used to adjust the amount of information returned by the face detector. If not specified the default of EYES is used.
+    <ul>Selector Types:
+        <li>FACE returns the face location</li>
+        <li>EYES returns the eye locations, face location, and gender * Default option</li>
+        <li>FULL returns all face features including gender</li>
+        <li>SETPOSE returns all face features</li>
+    </ul>
+        + Values
+            + `FACE`
+            + `EYES`
+            + `FULL`
+            + `SETPOSE`
+    + multiple_faces (optional, boolean, `"multiple_faces":"true"`)... `multiple_faces` if set to false stops the API from enrolling every face found in your photo under the same subject_id and only consider the first face found.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/enroll/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+            app_id: 4985f625
+            app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "image":"http://media.kairos.com/kairos-elizabeth.jpg",
+                "subject_id":"subtest1",
+                "gallery_name":"gallerytest1",
+                "selector":"SETPOSE",
+                "symmetricFill":"true"
+            }
+
++ Response 200
+
+    + Body
+
+            {
+                "images": [
+                {
+                    "time": 3.43817,
+                    "transaction": {
+                    "status": "success",
+                    "face_id": "685ff4b47a3db8579efd2fa6a7d9293b",
+                    "subject_id": "subtest1",
+                    "width": 934,
+                    "height": 934,
+                    "topLeftX": 300,
+                    "topLeftY": 526,
+                    "timestamp": "1417207442",
+                    "gallery_name": "gallerytest1"
+                    },
+                    "attributes": {
+                        "gender": {
+                            "type": "F",
+                            "confidence": "80%"
+                        }
+                    }
+                }]
+            }
+
+
+# POST /recognize
+####Takes an photo, finds the faces within it, and tries to match them against the faces you have already enrolled into a gallery.
+
+To match someone to a face enrolled in your gallery, all you need to do is submit a JPG or PNG photo.  You can submit the photo either as a publicly accessible URL or Base64 encoded.
+
+Next, specify which gallery we should search against for matches. This is the same name you used previously during the /enroll calls to create the gallery.
+
+We have the concept of a matching threshold, which by default is set at 80%. If the face you submit is 80% similar to one or more faces in your gallery we will return that as a list of potential candidates and how closely they match. If no one falls in that range we will return no matches.
+
+Depending on your usage, you may want to adjust the threshold lower or higher to return more or less potential candidates respectively.
+
+Finally, we have some advanced options available for your use.  We have set these options to sensible defaults, but sometimes there is a need to override them and we have provided that facility for you.
+
++ Parameters
+    + image (required, string, `"url":"http://media.kairos.com/kairos-elizabeth.jpg"`) ... Publicly accessible URL or Base64 encoded photo.
+    + gallery_name (required, string, `"gallery_name":"MyGallery"`)... Defined by you. `gallery_name` is used to identify the gallery.
+    + minHeadScale (optional, float, `"minHeadScale":".125"`)... Defined by you. `minHeadScale` is used to set the ratio of the smallest face we should look for in the photo. Accepts a value between .015 (1:64 scale) and .5 (1:2 scale). By default it is set at .125 (1:8 scale) if not specified.
+    + selector = `FACE` (optional, selector type, `"selector":"FACE"`)... `selector` is used to adjust the amount of information returned by the face detector. If not specified the default of EYES is used.
+    <ul>Selector Types:
+        <li>FACE returns the face location</li>
+        <li>EYES returns the eye locations, face location, and gender * Default option</li>
+        <li>FULL returns all face features including gender</li>
+        <li>SETPOSE returns all face features</li>
+    </ul>
+        + Values
+            + `FACE`
+            + `EYES`
+            + `FULL`
+            + `SETPOSE`
+    + threshold (optional, float between 0-1, `"threshold":"0.63"`)... Provided by you. `threshold` is used to determine a valid facial match.
+    + max_num_results (optional, integer, `"max_num_results":"4"`)... Provided by you. `max_num_results` is the maximum number of potential matches that are returned.  By default it is set to 10 if not specified.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/recognize/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "image":"http://media.kairos.com/kairos-elizabeth.jpg",
+                "gallery_name":"gallerytest1"
+            }
+
++ Response 200
+    + Body
+
+            {
+                "images": [
+                {
+                    "time": 2.86091,
+                    "transaction":
+                    {
+                        "status": "Complete",
+                        "subject": "test2",
+                        "confidence": 0.77,
+                        "gallery_name": "gallerytest1",
+                    },
+                    "candidates": [
+                    {
+                      "subtest1": "0.802138030529022",
+                      "enrollment_timestamp": "1416850761"
+                    },
+                    {
+                      "elizabeth": "0.802138030529022",
+                      "enrollment_timestamp": "1417207485"
+                    },
+                    {
+                      "elizabeth": "0.777253568172455",
+                      "enrollment_timestamp": "1416518415"
+                    },
+                    {
+                      "elizabeth": "0.777253568172455",
+                      "enrollment_timestamp": "1416431816"
+                    }
+                    ]
+                } ]
+            }
+
+# POST /detect
+####Takes a photo and returns the facial features it finds.
+
+To detect faces, all you need to do is submit a JPG or PNG photo.  You can submit the photo either as a publicly accessible URL or Base64 encoded.
+
+Finally, we have some advanced options available for your use.  We have set these options to sensible defaults, but sometimes there is a need to override them and we have provided that facility for you.
+
+One additional thing to note is that the returned coordinates all begin at the top left of the photo.
+
++ Parameters
+    + image (required, string, `"url":"http://media.kairos.com/kairos-elizabeth.jpg"`) ... Publicly accessible URL or Base64 encoded photo.
+    + selector = `FACE` (optional, selector type, `"selector":"FACE"`)... `selector` is used to adjust the amount of information returned by the face detector. If not specified the default of EYES is used.
+    <ul>Selector Types:
+        <li>FACE returns the face location</li>
+        <li>EYES returns the eye locations, face location, and gender * Default option</li>
+        <li>FULL returns all face features including gender</li>
+        <li>SETPOSE returns all face features</li>
+    </ul>
+        + Values
+            + `FACE`
+            + `EYES`
+            + `FULL`
+            + `SETPOSE`
+    + minHeadScale (optional, float, `"minHeadScale":".125"`)... Defined by you. `minHeadScale` is used to set the ratio of the smallest face we should look for in the photo. Accepts a value between .015 (1:64 scale) and .5 (1:2 scale). By default it is set at .125 (1:8 scale) if not specified.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/detect/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "image":"http://media.kairos.com/kairos-elizabeth.jpg",
+                "selector":"SETPOSE"
+            }
+
++ Response 200
+    + Body
+
+            {
+                "images": [
+                {
+                    "time": 0.920178,
+                    "status": "Complete",
+                    "file": "kairos-elizabeth.jpg",
+                    "width": 363,
+                    "height": 459,
+                    "faces": [
+                    {
+                      "topLeftX": 83,
+                      "topLeftY": 116,
+                      "width": 214,
+                      "height": 214,
+                      "leftEyeCenterX": 147.2,
+                      "leftEyeCenterY": 198.03333333333,
+                      "rightEyeCenterX": 236.36666666667,
+                      "rightEyeCenterY": 202.49166666667,
+                      "noseTipX": 189.30782076636,
+                      "noseTipY": 247.42409979148,
+                      "noseBtwEyesX": 190.82560686774,
+                      "noseBtwEyesY": 199.13258680545,
+                      "chinTipX": 185.52152145677,
+                      "chinTipY": 322.65740573701,
+                      "leftEyeCornerLeftX": 130.41158854167,
+                      "leftEyeCornerLeftY": 198.590625,
+                      "leftEyeCornerRightX": 165.17265625,
+                      "leftEyeCornerRightY": 201.725390625,
+                      "rightEyeCornerLeftX": 216.791796875,
+                      "rightEyeCornerLeftY": 202.90963541667,
+                      "rightEyeCornerRightX": 251.62252604167,
+                      "rightEyeCornerRightY": 204.651171875,
+                      "rightEarTragusX": 279.41412470895,
+                      "rightEarTragusY": 230.35172753314,
+                      "leftEarTragusX": 99.209682767636,
+                      "leftEarTragusY": 219.00099553028,
+                      "leftEyeBrowLeftX": 114.61836971663,
+                      "leftEyeBrowLeftY": 181.09826054474,
+                      "leftEyeBrowMiddleX": 139.03197089917,
+                      "leftEyeBrowMiddleY": 173.33512189705,
+                      "leftEyeBrowRightX": 170.01157598017,
+                      "leftEyeBrowRightY": 182.8392504961,
+                      "rightEyeBrowLeftX": 214.04207326658,
+                      "rightEyeBrowLeftY": 184.22311430359,
+                      "rightEyeBrowMiddleX": 246.84378387892,
+                      "rightEyeBrowMiddleY": 180.98883611551,
+                      "rightEyeBrowRightX": 266.46067998278,
+                      "rightEyeBrowRightY": 190.13583857069,
+                      "nostrilLeftHoleBottomX": 173.28232901361,
+                      "nostrilLeftHoleBottomY": 259.71609889878,
+                      "nostrilRightHoleBottomX": 201.68910145645,
+                      "nostrilRightHoleBottomY": 260.60891425845,
+                      "nostrilLeftSideX": 163.65244403243,
+                      "nostrilLeftSideY": 249.46124320225,
+                      "nostrilRightSideX": 214.69535289417,
+                      "nostrilRightSideY": 253.90898808413,
+                      "lipCornerLeftX": 152.54941371755,
+                      "lipCornerLeftY": 286.0775618745,
+                      "lipLineMiddleX": 185.08327972376,
+                      "lipLineMiddleY": 291.36531538983,
+                      "lipCornerRightX": 217.79570880072,
+                      "lipCornerRightY": 290.97171443622,
+                      "pitch": -0.80775276394591,
+                      "yaw": -0.55655682465553,
+                      "roll": 3.2250089279745,
+                      "attributes": {
+                        "gender": {
+                          "time": 0.05376,
+                          "type": "F",
+                          "confidence": "90%"
+                        }
+                        }
+                    } ]
+                } ]
+            }
+
+
+## POST /gallery/list_all
+####Lists out all the galleries you have created.
+
+This method requires no parameters.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/gallerylistall/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
++ Response 200
+    + Body
+
+            {
+                "time": 0.0045,
+                "status": "Complete",
+                "gallery_names": [
+                    "testgallery1",
+                    "testgallery2",
+                    "testgallery3",
+                    "testgallery4"
+                ]
+            }
+
+# POST /gallery/view
+####Lists out all the faces you have enrolled in a gallery.
+
+You just need to pass in the gallery_name and will receive back the list of subjects that you have enrolled within that gallery.
+
++ Parameters
+    + gallery_name (required, string, `"gallery_name":"gallerytest1"`)... Defined by you. `gallery_name` is the name of the gallery you wish to view.
+
+<!--a class="apiarylink text-success bolder default-spacing" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/galleryview/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "gallery_name":"gallerytest1"
+            }
+
++ Response 200
+    + Body
+
+            {
+                "status":"Complete",
+                "message":"gallery gallerytest1 was removed"
+            }
+
+
+
+# POST /gallery/remove
+####Removes a gallery and all of its subjects.
+
+Pass your gallery_name and it will be removed along with all of its enrolled subjects.
+
++ Parameters
+    + gallery_name (required, string, `"gallery_name":"gallerytest1"`)... `gallery_name` is the name of the gallery you wish to remove.
+
+<!--a class="apiarylink text-success bolder default-spacing" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/galleryremove/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "gallery_name":"gallerytest1"
+            }
+
++ Response 200
+    + Body
+
+            {
+                "status":"Complete",
+                "message":"gallery gallerytest1 was removed"
+            }
+
+
+# POST /gallery/remove_subject
+####Removes a face you have enrolled within a gallery.
+
+Pass in a gallery_name and a subject_id and we will remove that subject from the gallery.  Once the last subject is removed the gallery is removed automatically.
+
++ Parameters
+    + subject_id (required, string, `"subject_id":"Elizabeth"`) ... Defined by you. `subject_id` is used as an identifier for the face.
+    + gallery_name (required, string, `"gallery_name":"MyGallery"`)... Defined by you. `gallery_name` is used to identify the gallery.
+
+<!--a class="apiarylink text-success bolder" target="_blank" href="http://docs.kairos.apiary.io/#reference/face-recognition/galleryremovesubject/post?console=1">Try it in our API sandbox</a-->
+
++ Request (application/json)
+    + Headers
+
+                app_id: 4985f625
+                app_key: 4423301b832793e217d04bc44eb041d3
+
+    + Body
+
+            {
+                "gallery_name":"gallerytest1",
+                "subject_id":"test1"
+            }
+
++ Response 200
+    + Body
+
+            {
+                "time": 0.00358,
+                "status": "Complete"
+            }
